@@ -1,0 +1,201 @@
+app_code = """import streamlit as st
+
+import time
+
+
+
+# Function to calculate WPM (Words Per Minute)
+
+def calculate_wpm(start_time, end_time, text_length):
+
+    time_taken = end_time - start_time  # Time in seconds
+
+    words = text_length / 5  # Average number of characters per word is 5
+
+    wpm = (words / time_taken) * 60  # Words per minute
+
+    return wpm
+
+
+
+# Function to generate random text based on difficulty level
+
+def generate_text(level):
+
+    if level == 1:
+
+        return "The quick brown fox jumps over the lazy dog."
+
+    elif level == 2:
+
+        return "Python is an amazing programming language for data science."
+
+    elif level == 3:
+
+        return "Artificial Intelligence is revolutionizing the way we interact with technology."
+
+    else:
+
+        return "Deep learning techniques have enabled significant advancements in computer vision and natural language processing."
+
+
+
+# Main Typing Test App
+
+def typing_test():
+
+    st.title("Typing Speed Test")
+
+
+
+    # User Input: Username
+
+    username = st.text_input("Enter your username:")
+
+
+
+    if not username:
+
+        st.warning("Please enter your username to start.")
+
+        return
+
+
+
+    # Level selection
+
+    level = st.selectbox("Choose difficulty level", ["Easy", "Medium", "Hard"], index=0)
+
+
+
+    # Map level to integer value
+
+    level_value = {"Easy": 1, "Medium": 2, "Hard": 3}[level]
+
+
+
+    # Initialize session state variables
+
+    if "text_to_type" not in st.session_state or st.session_state.level_value != level_value:
+
+        st.session_state.text_to_type = generate_text(level_value)
+
+        st.session_state.level_value = level_value
+
+        st.session_state.start_time = None
+
+        st.session_state.finished = False
+
+        st.session_state.user_input = ""
+
+
+
+    # Display the text to type
+
+    st.write("Your text to type:")
+
+    st.code(st.session_state.text_to_type)
+
+
+
+    # Start the test
+
+    if st.session_state.start_time is None:
+
+        if st.button("Start Typing Test"):
+
+            st.session_state.start_time = time.time()
+
+            st.info("Start typing in the box below!")
+
+
+
+    # Typing area
+
+    if st.session_state.start_time:
+
+        st.session_state.user_input = st.text_area(
+
+            "Start typing here...", st.session_state.user_input, height=100
+
+        )
+
+
+
+        # Check if the user has completed typing
+
+        if st.session_state.user_input.strip() == st.session_state.text_to_type and not st.session_state.finished:
+
+            st.session_state.finished = True
+
+            end_time = time.time()
+
+            wpm = calculate_wpm(st.session_state.start_time, end_time, len(st.session_state.text_to_type))
+
+
+
+            # Display the results
+
+            st.success("Great job! You typed the text correctly.")
+
+            st.write(f"Your typing speed is: {wpm:.2f} Words Per Minute (WPM)")
+
+
+
+            # Save WPM to session state for average calculation
+
+            if "test_times" not in st.session_state:
+
+                st.session_state.test_times = []
+
+            st.session_state.test_times.append(wpm)
+
+
+
+    # Display average WPM if applicable
+
+    if "test_times" in st.session_state and st.session_state.test_times:
+
+        avg_wpm = sum(st.session_state.test_times) / len(st.session_state.test_times)
+
+        st.write(f"Your average typing speed is: {avg_wpm:.2f} WPM over {len(st.session_state.test_times)} tests.")
+
+
+
+# Run the Streamlit app
+
+# if _name_ == "_main_":
+
+typing_test()"""
+
+
+
+with open("app.py", "w") as file:
+
+    file.write(app_code)
+
+
+
+# Setup ngrok
+
+from pyngrok import ngrok
+
+
+
+# Replace 'YOUR_NGROK_AUTH_TOKEN' with your ngrok authtoken
+
+!ngrok authtoken 2rAxH0ivVqWPwaR77pMnbsG6z1b_31d7J419wPxuvK5gqzyFJ
+
+
+
+# Start Streamlit app
+
+get_ipython().system_raw("streamlit run app.py &")
+
+
+
+# Expose the app via ngrok
+
+public_url = ngrok.connect(8501)
+
+print(f"Streamlit app is live at: {public_url}")
